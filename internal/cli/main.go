@@ -24,9 +24,11 @@ const (
 	   Use -format option to specify a Go time format string. Note: migrations with the same time cause "duplicate migration version" error.
            Use -tz option to specify the timezone that will be used when generating non-sequential migrations (defaults: UTC).
 `
-	gotoUsage = `goto V       Migrate to version V`
-	upUsage   = `up [N]       Apply all or N up migrations`
-	downUsage = `down [N] [-all]    Apply all or N down migrations
+	gotoUsage     = `goto V       Migrate to version V`
+	upUsage       = `up [N]       Apply all or N up migrations`
+	seedUsage     = `seed-up [N]	  Apply all migration File without version`
+	seedDownUsage = `seed-down [N]	  Apply all down migrations`
+	downUsage     = `down [N] [-all]    Apply all or N down migrations
 	Use -all to apply all down migrations`
 	dropUsage = `drop [-f]    Drop everything inside database
 	Use -f to bypass confirmation`
@@ -91,10 +93,11 @@ Commands:
   %s
   %s
   %s
+  %s
   version      Print current migration version
 
 Source drivers: `+strings.Join(source.List(), ", ")+`
-Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, downUsage, dropUsage, forceUsage)
+Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, seedUsage, downUsage, dropUsage, forceUsage)
 	}
 
 	flag.Parse()
@@ -252,7 +255,63 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		if log.verbose {
 			log.Println("Finished after", time.Since(startTime))
 		}
+	case "seed-up":
+		upSet, helpPtr := newFlagSetWithHelp("seed-up")
 
+		if err := upSet.Parse(args); err != nil {
+			log.fatalErr(err)
+		}
+
+		handleSubCmdHelp(*helpPtr, upUsage, upSet)
+
+		if migraterErr != nil {
+			log.fatalErr(migraterErr)
+		}
+
+		limit := -1
+		if upSet.NArg() > 0 {
+			n, err := strconv.ParseUint(upSet.Arg(0), 10, 64)
+			if err != nil {
+				log.fatal("error: can't read limit argument N")
+			}
+			limit = int(n)
+		}
+
+		if err := seedUpCmd(migrater, limit); err != nil {
+			log.fatalErr(err)
+		}
+
+		if log.verbose {
+			log.Println("Finished after", time.Since(startTime))
+		}
+
+	case "seed-down":
+		downFlagSet, helpPtr := newFlagSetWithHelp("seed-down")
+		applyAll := downFlagSet.Bool("all", false, "Apply all down migrations")
+
+		if err := downFlagSet.Parse(args); err != nil {
+			log.fatalErr(err)
+		}
+
+		handleSubCmdHelp(*helpPtr, downUsage, downFlagSet)
+
+		if migraterErr != nil {
+			log.fatalErr(migraterErr)
+		}
+
+		downArgs := downFlagSet.Args()
+		num, _, err := numDownMigrationsFromArgs(*applyAll, downArgs)
+		if err != nil {
+			log.fatalErr(err)
+		}
+
+		if err := seedDownCmd(migrater, num); err != nil {
+			log.fatalErr(err)
+		}
+
+		if log.verbose {
+			log.Println("Finished after", time.Since(startTime))
+		}
 	case "down":
 		downFlagSet, helpPtr := newFlagSetWithHelp("down")
 		applyAll := downFlagSet.Bool("all", false, "Apply all down migrations")
