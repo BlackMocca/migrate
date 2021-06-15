@@ -253,11 +253,12 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 						curl,
 					)
 				}
-				if resp.StatusCode() != http.StatusOK {
-					log.Println(fmt.Sprintf("Error Line : %d", index))
-					return fmt.Errorf(string(resp.Body()))
+				if resp.StatusCode() == http.StatusNoContent || resp.StatusCode() == http.StatusOK {
+					fmt.Println("sending data success: " + data)
+					continue
 				}
-				fmt.Println("sending data success: " + data)
+				log.Println(fmt.Sprintf("Error Line : %d", index))
+				return fmt.Errorf(string(resp.Body()))
 			}
 
 			fmt.Println("migrate file: " + fInfo.Name() + " success")
