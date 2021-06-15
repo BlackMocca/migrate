@@ -229,7 +229,7 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 	for _, fInfo := range filesInfo {
 		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".up.txt") {
 			filepath := path + "/" + fInfo.Name()
-			log.Println(filepath)
+
 			txt, err := ioutil.ReadFile(filepath)
 			if err != nil {
 				return err
@@ -242,7 +242,7 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 					SetHeader("Authorization", fmt.Sprintf("Token %s", token)).
 					SetBody(data).
 					Post(database)
-				if err != nil || resp.StatusCode() == http.StatusUnauthorized {
+				if err != nil {
 					return fmt.Errorf(`
 						Error of file: %s
 						Line: %d
@@ -252,6 +252,10 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 						index,
 						curl,
 					)
+				}
+				if resp.StatusCode() != http.StatusOK {
+					log.Println(fmt.Sprintf("Error Line : %d", index))
+					return fmt.Errorf(string(resp.Body()))
 				}
 				fmt.Println("sending data success: " + data)
 			}
