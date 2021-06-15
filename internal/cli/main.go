@@ -24,15 +24,29 @@ const (
 	   Use -format option to specify a Go time format string. Note: migrations with the same time cause "duplicate migration version" error.
            Use -tz option to specify the timezone that will be used when generating non-sequential migrations (defaults: UTC).
 `
-	gotoUsage     = `goto V       Migrate to version V`
-	upUsage       = `up [N]       Apply all or N up migrations`
-	seedUsage     = `seed-up [N]	  Apply all migration File without version`
-	seedDownUsage = `seed-down [N]	  Apply all down migrations`
-	downUsage     = `down [N] [-all]    Apply all or N down migrations
+	gotoUsage       = `goto V       Migrate to version V`
+	upUsage         = `up [N]       Apply all or N up migrations`
+	seedUsage       = `seed-up [N]	  Apply all migration File without version`
+	seedDownUsage   = `seed-down [N]	  Apply all down migrations only first file`
+	seedInfluxUsage = `seed-influx-up Read All file with write data by line protocol`
+	downUsage       = `down [N] [-all]    Apply all or N down migrations
 	Use -all to apply all down migrations`
 	dropUsage = `drop [-f]    Drop everything inside database
 	Use -f to bypass confirmation`
 	forceUsage = `force V      Set version V but don't run migration (ignores dirty state)`
+)
+
+const (
+	seedInfluxDetail = `
+This function is read Directory for get file to write data
+Plase Read For more information at https://docs.influxdata.com/influxdb/v2.0/write-data/developer-tools/api/
+example curl
+	curl -i -XPOST "http://127.0.0.1:8086/api/v2/write?bucket=test&precision=s&org=myorg" --header 'Authorization: Token aPR5BNM4dKlarDi8Atg59NuBSqJsJNFp03TA3RvAxVNRM6giMJiQS0gt_yPVPnSCKTUm1ZCFp_3YbrW5Ui2mRQ==' --data-raw "weather,location=us-midwest temperature=82 1623741991"
+Command must be required
+	-database	Url of curl example http://127.0.0.1:8086/api/v2/write?bucket=test&precision=s&org=myorg
+	-path		Identify directory path to migrate
+	-token		Policy token
+	`
 )
 
 func handleSubCmdHelp(help bool, usage string, flagSet *flag.FlagSet) {
@@ -94,10 +108,12 @@ Commands:
   %s
   %s
   %s
+  %s
+  %s
   version      Print current migration version
 
 Source drivers: `+strings.Join(source.List(), ", ")+`
-Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, seedUsage, downUsage, dropUsage, forceUsage)
+Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, seedUsage, seedDownUsage, seedInfluxUsage, downUsage, dropUsage, forceUsage)
 	}
 
 	flag.Parse()
@@ -312,6 +328,25 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		if log.verbose {
 			log.Println("Finished after", time.Since(startTime))
 		}
+	case "seed-influx":
+		seedInfluxFlagSet, helpPtr := newFlagSetWithHelp("seed-influx")
+		seedInfluxFlagSet.Args()
+
+		database := seedInfluxFlagSet.String("database", "", "URI of influx")
+		path := seedInfluxFlagSet.String("path", "", "path file to directory")
+		token := seedInfluxFlagSet.String("token", "", "Token Policy")
+
+		if err := seedInfluxFlagSet.Parse(args); err != nil {
+			log.fatalErr(err)
+		}
+
+		handleSubCmdHelp(*helpPtr, seedInfluxDetail, seedInfluxFlagSet)
+
+		if err := seedUpInfluxCmd(*database, *path, *token); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
 	case "down":
 		downFlagSet, helpPtr := newFlagSetWithHelp("down")
 		applyAll := downFlagSet.Bool("all", false, "Apply all down migrations")

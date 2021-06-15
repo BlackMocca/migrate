@@ -3,12 +3,15 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/stub" // TODO remove again
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -211,6 +214,52 @@ func seedDownCmd(m *migrate.Migrate, limit int) error {
 			log.Println(err)
 		}
 	}
+	return nil
+}
+
+func seedUpInfluxCmd(database string, path string, token string) error {
+	filesInfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	if len(filesInfo) == 0 {
+		return migrate.ErrNoChange
+	}
+
+	for _, fInfo := range filesInfo {
+		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".up.txt") {
+			filepath := path + "/" + fInfo.Name()
+			log.Println(filepath)
+			txt, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				return err
+			}
+			splitStr := strings.Split(string(txt), "\n")
+			for index, data := range splitStr {
+				data = strings.TrimSuffix(data, ",")
+				curl := fmt.Sprintf(`curl -i -XPOST "%s" --header 'Authorization: Token %s' --data-raw "%s"`, database, path, data)
+				resp, err := resty.New().SetDebug(false).R().
+					SetHeader("Authorization", fmt.Sprintf("Token %s", token)).
+					SetBody(data).
+					Post(database)
+				if err != nil || resp.StatusCode() == http.StatusUnauthorized {
+					return fmt.Errorf(`
+						Error of file: %s
+						Line: %d
+						Curl: %s
+					`,
+						fInfo.Name(),
+						index,
+						curl,
+					)
+				}
+				fmt.Println("sending data success: " + data)
+			}
+
+			fmt.Println("migrate file: " + fInfo.Name() + " success")
+		}
+	}
+
 	return nil
 }
 

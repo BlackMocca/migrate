@@ -1,0 +1,6 @@
+weather,location=us-midwest temperature=82 1623741991
+weather,location=us-midwest temperature=82 1623741991
+weather,location=us-midwest temperature=82 1623741991
+weather,location=us-midwest temperature=82 1623741991
+weather,location=us-midwest temperature=82 1623741991
+weather,location=us-midwest temperature=82 1623741991
