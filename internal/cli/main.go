@@ -84,7 +84,8 @@ func Main(version string) {
 	pathPtr := flag.String("path", "", "")
 	databasePtr := flag.String("database", "", "")
 	sourcePtr := flag.String("source", "", "")
-
+	tokenPtr := flag.String("token", "", "Token Policy")
+	log.Println(*tokenPtr)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr,
 			`Usage: migrate OPTIONS COMMAND [arg...]
@@ -98,6 +99,7 @@ Options:
   -lock-timeout N  Allow N seconds to acquire database lock (default 15)
   -verbose         Print verbose logging
   -version         Print version
+  -token		   Token Policy usage for seed influx
   -help            Print usage
 
 Commands:
@@ -328,21 +330,20 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		if log.verbose {
 			log.Println("Finished after", time.Since(startTime))
 		}
-	case "seed-influx":
-		seedInfluxFlagSet, helpPtr := newFlagSetWithHelp("seed-influx")
-		seedInfluxFlagSet.Args()
-
-		database := seedInfluxFlagSet.String("database", "", "URI of influx")
-		path := seedInfluxFlagSet.String("path", "", "path file to directory")
-		token := seedInfluxFlagSet.String("token", "", "Token Policy")
+	case "seed-influx-up":
+		seedInfluxFlagSet, helpPtr := newFlagSetWithHelp("seed-influx-up")
 
 		if err := seedInfluxFlagSet.Parse(args); err != nil {
-			log.fatalErr(err)
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
 		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("token:", *tokenPtr)
 
 		handleSubCmdHelp(*helpPtr, seedInfluxDetail, seedInfluxFlagSet)
 
-		if err := seedUpInfluxCmd(*database, *path, *token); err != nil {
+		if err := seedUpInfluxCmd(*databasePtr, *pathPtr, *tokenPtr); err != nil {
 			log.fatalErr(err)
 		}
 
