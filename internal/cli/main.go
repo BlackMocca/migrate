@@ -24,14 +24,17 @@ const (
 	   Use -format option to specify a Go time format string. Note: migrations with the same time cause "duplicate migration version" error.
            Use -tz option to specify the timezone that will be used when generating non-sequential migrations (defaults: UTC).
 `
-	gotoUsage       = `goto V       Migrate to version V`
-	upUsage         = `up [N]       Apply all or N up migrations`
-	seedUsage       = `seed-up [N]	  Apply all migration File without version`
-	seedDownUsage   = `seed-down [N]	  Apply all down migrations only first file`
-	seedInfluxUsage = `seed-influx-up Read All file with write data by line protocol`
-	downUsage       = `down [N] [-all]    Apply all or N down migrations
+	gotoUsage        = `goto V       	  Migrate to version V`
+	upUsage          = `up [N]       	  Apply all or N up migrations`
+	upElasticUsage   = `elastic-up	 	  Apply all rest api on elasticsearch with json file`
+	seedUsage        = `seed-up [N]	  	  Apply all migration File without version`
+	seedDownUsage    = `seed-down [N]	  Apply all down migrations only first file`
+	seedInfluxUsage  = `seed-influx-up 	  Read All file with write data by line protocol`
+	seedElasticUsage = `seed-elastic-up   Read All file with write data by json pattern`
+	downUsage        = `down [N] [-all]   Apply all or N down migrations
 	Use -all to apply all down migrations`
-	dropUsage = `drop [-f]    Drop everything inside database
+	downElasticUsage = `elastic-down	  Down All File migration`
+	dropUsage        = `drop [-f]    Drop everything inside database
 	Use -f to bypass confirmation`
 	forceUsage = `force V      Set version V but don't run migration (ignores dirty state)`
 )
@@ -46,6 +49,15 @@ Command must be required
 	-database	Url of curl example http://127.0.0.1:8086/api/v2/write?bucket=test&precision=s&org=myorg
 	-path		Identify directory path to migrate
 	-token		Policy token
+	`
+	seedElasticDetail = `
+This function is read Directory for get File to write data
+example data
+	-database url host to elastic example http://127.0.0.1:9200
+	-path	  Identify directory path to migrate
+	-index	  Elastic Database index
+	-skip-error skip error when migrate but will show message
+	-debug	  show request to elastic
 	`
 )
 
@@ -85,7 +97,10 @@ func Main(version string) {
 	databasePtr := flag.String("database", "", "")
 	sourcePtr := flag.String("source", "", "")
 	tokenPtr := flag.String("token", "", "Token Policy")
-	log.Println(*tokenPtr)
+	indexPtr := flag.String("index", "", "Elastic Index")
+	skippErrorPtr := flag.Bool("skip-error", true, "skip error when some migrate error but will show error message")
+	debugPtr := flag.Bool("debug", false, "open debug mode")
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr,
 			`Usage: migrate OPTIONS COMMAND [arg...]
@@ -112,10 +127,12 @@ Commands:
   %s
   %s
   %s
+  %s
+  %s
   version      Print current migration version
 
 Source drivers: `+strings.Join(source.List(), ", ")+`
-Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, seedUsage, seedDownUsage, seedInfluxUsage, downUsage, dropUsage, forceUsage)
+Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, upElasticUsage, seedUsage, seedDownUsage, seedInfluxUsage, seedElasticDetail, downUsage, dropUsage, forceUsage)
 	}
 
 	flag.Parse()
@@ -273,6 +290,46 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		if log.verbose {
 			log.Println("Finished after", time.Since(startTime))
 		}
+	case "elastic-up":
+		elasticUpSet, helpPtr := newFlagSetWithHelp("elastic-up")
+
+		if err := elasticUpSet.Parse(args); err != nil {
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
+		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("index:", *indexPtr)
+		log.Println("skip-error:", *skippErrorPtr)
+		log.Println("debug:", *debugPtr)
+
+		handleSubCmdHelp(*helpPtr, upElasticUsage, elasticUpSet)
+
+		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
+	case "elastic-down":
+		elasticDownSet, helpPtr := newFlagSetWithHelp("elastic-down")
+
+		if err := elasticDownSet.Parse(args); err != nil {
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
+		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("index:", *indexPtr)
+		log.Println("skip-error:", *skippErrorPtr)
+		log.Println("debug:", *debugPtr)
+
+		handleSubCmdHelp(*helpPtr, upElasticUsage, elasticDownSet)
+
+		if err := seedDownElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
 	case "seed-up":
 		upSet, helpPtr := newFlagSetWithHelp("seed-up")
 
@@ -344,6 +401,26 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		handleSubCmdHelp(*helpPtr, seedInfluxDetail, seedInfluxFlagSet)
 
 		if err := seedUpInfluxCmd(*databasePtr, *pathPtr, *tokenPtr); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
+	case "seed-elastic-up":
+		seedElasticSet, helpPtr := newFlagSetWithHelp("seed-elastic-up")
+
+		if err := seedElasticSet.Parse(args); err != nil {
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
+		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("index:", *indexPtr)
+		log.Println("skip-error:", *skippErrorPtr)
+		log.Println("debug:", *debugPtr)
+
+		handleSubCmdHelp(*helpPtr, seedElasticDetail, seedElasticSet)
+
+		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 

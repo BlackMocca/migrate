@@ -1,0 +1,12 @@
+[
+    {
+        "method": "POST",
+        "path": "${index}/_bulk",
+        "header": {
+            "Content-Type": "text/plain; charset=UTF-8"
+        },
+        "body": "",
+        "body_type": "bulk",
+        "body_path_file": "bulkfile/example.txt"
+    }
+]

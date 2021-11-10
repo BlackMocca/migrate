@@ -1,0 +1,39 @@
+[
+    {
+        "method": "PUT",
+        "path": "${index}",
+        "header": null,
+        "body": {
+            "settings": {
+                "index": {
+                    "max_ngram_diff": 40
+                },
+                "analysis": {
+                    "analyzer": {
+                        "my_analyzer": {
+                            "tokenizer": "my_tokenizer"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_tokenizer": {
+                            "type": "ngram",
+                            "min_gram": 1,
+                            "max_gram": 20
+                        }
+                    }
+                }
+            },
+            "mappings": {
+                "properties": {
+                    "id": {
+                        "type": "keyword"
+                    },
+                    "title": {
+                        "type": "text",
+                        "analyzer": "my_analyzer"
+                    }
+                }
+            }
+        }
+    }
+]

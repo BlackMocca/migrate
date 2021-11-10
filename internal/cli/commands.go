@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +14,8 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/elasticsearch"
+	_ "github.com/golang-migrate/migrate/v4/database/elasticsearch"
 	_ "github.com/golang-migrate/migrate/v4/database/stub" // TODO remove again
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -259,6 +262,140 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 				}
 				log.Println(fmt.Sprintf("Error Line : %d", index))
 				return fmt.Errorf(string(resp.Body()))
+			}
+
+			fmt.Println("migrate file: " + fInfo.Name() + " success")
+		}
+	}
+
+	return nil
+}
+
+func seedUpElasticCmd(database string, path string, index string, skippError bool, debug bool) error {
+	filesInfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	if len(filesInfo) == 0 {
+		return migrate.ErrNoChange
+	}
+
+	for _, fInfo := range filesInfo {
+		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".up.json") {
+			filepath := path + "/" + fInfo.Name()
+
+			bu, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				return err
+			}
+
+			restyConfig := make([]*elasticsearch.RestConfig, 0)
+			elastics := make([]*elasticsearch.Elasticsearch, 0)
+			if err := json.Unmarshal(bu, &restyConfig); err != nil {
+				return err
+			}
+
+			for configIndex, _ := range restyConfig {
+				if restyConfig[configIndex].IsZero() {
+					return errors.New("method and path must be required")
+				}
+
+				restyConfig[configIndex].MigrationPath = path
+				restyConfig[configIndex].ReplaceStringWithIndex(index)
+				elastics = append(elastics, &elasticsearch.Elasticsearch{
+					Index:      index,
+					RestConfig: restyConfig[configIndex],
+				})
+			}
+
+			for _, elastic := range elastics {
+				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				req := resty.New().SetDebug(debug).SetAllowGetMethodPayload(true).R()
+				req.URL = url
+				req.Method = elastic.RestConfig.Method
+				req.Header = elastic.RestConfig.ToHTTPHeader()
+				req.Body = elastic.RestConfig.Body
+
+				resp, err := req.Send()
+				if err != nil {
+					return err
+				}
+
+				if resp.StatusCode() >= 400 {
+					msg := errors.New(string(resp.Body()))
+					if skippError {
+						fmt.Println(msg.Error())
+					} else {
+						return msg
+					}
+				}
+			}
+
+			fmt.Println("migrate file: " + fInfo.Name() + " success")
+		}
+	}
+
+	return nil
+}
+
+func seedDownElasticCmd(database string, path string, index string, skippError bool, debug bool) error {
+	filesInfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	if len(filesInfo) == 0 {
+		return migrate.ErrNoChange
+	}
+
+	for i := len(filesInfo) - 1; i >= 0; i-- {
+		fInfo := filesInfo[i]
+		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".down.json") {
+			filepath := path + "/" + fInfo.Name()
+
+			bu, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				return err
+			}
+
+			restyConfig := make([]*elasticsearch.RestConfig, 0)
+			elastics := make([]*elasticsearch.Elasticsearch, 0)
+			if err := json.Unmarshal(bu, &restyConfig); err != nil {
+				return err
+			}
+
+			for configIndex, _ := range restyConfig {
+				if restyConfig[configIndex].IsZero() {
+					return errors.New("method and path must be required")
+				}
+
+				restyConfig[configIndex].ReplaceStringWithIndex(index)
+				elastics = append(elastics, &elasticsearch.Elasticsearch{
+					Index:      index,
+					RestConfig: restyConfig[configIndex],
+				})
+			}
+
+			for _, elastic := range elastics {
+				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				req := resty.New().SetDebug(debug).SetAllowGetMethodPayload(true).R()
+				req.URL = url
+				req.Method = elastic.RestConfig.Method
+				req.Header = elastic.RestConfig.ToHTTPHeader()
+				req.Body = elastic.RestConfig.Body
+
+				resp, err := req.Send()
+				if err != nil {
+					return err
+				}
+
+				if resp.StatusCode() >= 400 {
+					msg := errors.New(string(resp.Body()))
+					if skippError {
+						fmt.Println(msg.Error())
+					} else {
+						return msg
+					}
+				}
 			}
 
 			fmt.Println("migrate file: " + fInfo.Name() + " success")

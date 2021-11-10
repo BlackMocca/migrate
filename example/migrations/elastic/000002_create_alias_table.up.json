@@ -1,0 +1,17 @@
+[
+    {
+        "method": "POST",
+        "path": "/_aliases",
+        "header": null,
+        "body": {
+            "actions": [
+                {
+                    "add": {
+                        "index": "${index}",
+                        "alias": "test-alias"
+                    }
+                }
+            ]
+        }
+    }
+]

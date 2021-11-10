@@ -1,0 +1,11 @@
+[
+    {
+        "method": "POST",
+        "path": "${index}/_doc/1",
+        "header": null,
+        "body": {
+            "id": "1",
+            "name": "ทดสอบ1 insert by doc"
+        }
+    }
+]

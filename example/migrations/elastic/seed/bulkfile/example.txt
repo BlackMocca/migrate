@@ -1,0 +1,5 @@
+{"index" : {"_index": "${index}", "_type": "_doc","_id": "2"}}
+{"id": "2", "name": "ทดสอบ bulk_2"}
+{"index" : {"_index": "${index}", "_type": "_doc","_id": "3"}}
+{"id": "3", "name": "ทดสอบ bulk_3"}
+
