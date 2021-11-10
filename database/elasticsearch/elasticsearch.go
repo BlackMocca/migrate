@@ -1,11 +1,10 @@
 package elasticsearch
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -51,7 +50,7 @@ func (r RestConfig) ToHTTPHeader() http.Header {
 	return h
 }
 
-func (r *RestConfig) ReplaceStringWithIndex(index string) {
+func (r *RestConfig) ReplaceStringWithIndex(index string) error {
 	r.Path = strings.ReplaceAll(r.Path, INDEX_TEMPLATE, index)
 	if r.Header != nil {
 		for key, val := range r.Header {
@@ -59,40 +58,26 @@ func (r *RestConfig) ReplaceStringWithIndex(index string) {
 		}
 	}
 
-	if r.Body != nil {
-		switch r.BodyType {
-		case BODY_TYPE_BULK:
-			pathFile := fmt.Sprintf("%s/%s", strings.Trim(r.MigrationPath, "/"), strings.Trim(r.BodyPathFile, "/"))
-			file, err := os.Open(pathFile)
-			if err != nil {
-				panic(err)
-			}
-			defer file.Close()
+	switch r.BodyType {
+	case BODY_TYPE_BULK:
+		pathFile := fmt.Sprintf("%s/%s", strings.Trim(r.MigrationPath, "/"), strings.Trim(r.BodyPathFile, "/"))
+		bu, err := ioutil.ReadFile(pathFile)
 
-			var strs = []string{}
-			scanner := bufio.NewScanner(file)
-			// optionally, resize scanner's capacity for lines over 64K, see next example
-			for scanner.Scan() {
-				lineTxt := scanner.Text()
-				if lineTxt != "" && lineTxt != "\n" {
-					strs = append(strs, lineTxt)
-				}
-			}
-
-			if err := scanner.Err(); err != nil {
-				panic(err)
-			}
-
-			r.Body = strs
-		default:
-			bu, err := json.Marshal(r.Body)
-			if err != nil {
-				panic(err)
-			}
-
-			str := strings.ReplaceAll(string(bu), INDEX_TEMPLATE, index)
-
-			r.Body = str
+		if err != nil {
+			return err
 		}
+
+		r.Body = string(bu)
+	default:
+		bu, err := json.Marshal(r.Body)
+		if err != nil {
+			return err
+		}
+
+		str := strings.ReplaceAll(string(bu), INDEX_TEMPLATE, index)
+
+		r.Body = str
 	}
+
+	return nil
 }

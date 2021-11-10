@@ -3,9 +3,9 @@
         "method": "POST",
         "path": "${index}/_bulk",
         "header": {
-            "Content-Type": "text/plain; charset=UTF-8"
+            "Content-Type": "application/x-ndjson; charset=UTF-8"
         },
-        "body": "",
+        "body": null,
         "body_type": "bulk",
         "body_path_file": "bulkfile/example.txt"
     }

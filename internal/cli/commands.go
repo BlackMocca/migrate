@@ -301,7 +301,9 @@ func seedUpElasticCmd(database string, path string, index string, skippError boo
 				}
 
 				restyConfig[configIndex].MigrationPath = path
-				restyConfig[configIndex].ReplaceStringWithIndex(index)
+				if err := restyConfig[configIndex].ReplaceStringWithIndex(index); err != nil {
+					return err
+				}
 				elastics = append(elastics, &elasticsearch.Elasticsearch{
 					Index:      index,
 					RestConfig: restyConfig[configIndex],
@@ -310,7 +312,7 @@ func seedUpElasticCmd(database string, path string, index string, skippError boo
 
 			for _, elastic := range elastics {
 				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
-				req := resty.New().SetDebug(debug).SetAllowGetMethodPayload(true).R()
+				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
 				req.Method = elastic.RestConfig.Method
 				req.Header = elastic.RestConfig.ToHTTPHeader()
