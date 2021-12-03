@@ -67,16 +67,20 @@ func (r *RestConfig) ReplaceStringWithIndex(index string) error {
 			return err
 		}
 
-		r.Body = string(bu)
-	default:
-		bu, err := json.Marshal(r.Body)
-		if err != nil {
-			return err
-		}
-
 		str := strings.ReplaceAll(string(bu), INDEX_TEMPLATE, index)
 
 		r.Body = str
+	default:
+		if r.Body != nil {
+			bu, err := json.Marshal(r.Body)
+			if err != nil {
+				return err
+			}
+
+			str := strings.ReplaceAll(string(bu), INDEX_TEMPLATE, index)
+
+			r.Body = str
+		}
 	}
 
 	return nil
