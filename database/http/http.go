@@ -1,6 +1,7 @@
 package elasticsearch
 
 import (
+	"net/http"
 	"net/url"
 	"reflect"
 
@@ -12,12 +13,12 @@ type HttpSeed struct {
 }
 
 type RestConfig struct {
-	MigrationPath string              `json:"-"`
-	Method        string              `json:"method"`
-	Path          string              `json:"path"`
-	QueryParams   url.Values          `json:"query_params"`
-	Header        map[string][]string `json:"header"`
-	Body          interface{}         `json:"body"`
+	MigrationPath string      `json:"-"`
+	Method        string      `json:"method"`
+	Path          string      `json:"path"`
+	QueryParams   url.Values  `json:"query_params"`
+	Header        http.Header `json:"header"`
+	Body          interface{} `json:"body"`
 }
 
 func (r RestConfig) IsZero() bool {
@@ -54,7 +55,7 @@ func NewRestConfig(params map[string]interface{}) *RestConfig {
 			if val != nil {
 				for hKey, hVals := range val.(map[string]interface{}) {
 					if _, ok := header[hKey]; !ok {
-						header[hKey] = append(header[hKey], "")
+						header[hKey] = make([]string, 0)
 					}
 					header[hKey] = append(header[hKey], cast.ToString(hVals))
 				}
