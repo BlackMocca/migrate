@@ -45,6 +45,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/snowflakedb/gosnowflake v1.4.3
+	github.com/spf13/cast v1.4.1 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51 // indirect
 	github.com/xanzy/go-gitlab v0.15.0

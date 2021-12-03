@@ -1,0 +1,11 @@
+[
+    {
+        "method": "DELETE",
+        "path": "/delete",
+        "query_params": null,
+        "header": null,
+        "body": {
+            "hello": "this is body from delete method"
+        }
+    }
+]

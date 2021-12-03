@@ -1,0 +1,54 @@
+[
+    {
+        "method": "GET",
+        "path": "/get",
+        "query_params": {
+            "foo": "bar",
+            "ids": [
+                "1",
+                "2",
+                "3"
+            ]
+        },
+        "header": {
+            "x-foo": "bar"
+        },
+        "body": null
+    },
+    {
+        "method": "GET",
+        "path": "/get",
+        "query_params": {
+            "foo": "bar",
+            "ids": [
+                "1",
+                "2",
+                "3"
+            ]
+        },
+        "header": {
+            "x-foo": "bar"
+        },
+        "body": {
+            "hello": "world"
+        }
+    },
+    {
+        "method": "POST",
+        "path": "/post",
+        "query_params": null,
+        "header": null,
+        "body": {
+            "hello": "this is body from post method"
+        }
+    },
+    {
+        "method": "PUT",
+        "path": "/put",
+        "query_params": null,
+        "header": null,
+        "body": {
+            "hello": "this is body from put method"
+        }
+    }
+]

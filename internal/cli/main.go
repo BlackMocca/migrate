@@ -31,6 +31,8 @@ const (
 	seedDownUsage    = `seed-down [N]	  Apply all down migrations only first file`
 	seedInfluxUsage  = `seed-influx-up 	  Read All file with write data by line protocol`
 	seedElasticUsage = `seed-elastic-up   Read All file with write data by json pattern`
+	httpUp           = `http-up			  Read All file with send rest api (start by version ascending)`
+	httpDown         = `http-down		  Apply All file with send rest api (start by version descending)`
 	downUsage        = `down [N] [-all]   Apply all or N down migrations
 	Use -all to apply all down migrations`
 	downElasticUsage = `elastic-down	  Down All File migration`
@@ -56,6 +58,14 @@ example data
 	-database url host to elastic example http://127.0.0.1:9200
 	-path	  Identify directory path to migrate
 	-index	  Elastic Database index
+	-skip-error skip error when migrate but will show message
+	-debug	  show request to elastic
+	`
+	seedHTTPDetail = `
+This function is read Directory for get File to send rest api
+example data
+	-database url host to send example http://127.0.0.1:9200
+	-path	  Identify directory path to migrate
 	-skip-error skip error when migrate but will show message
 	-debug	  show request to elastic
 	`
@@ -129,10 +139,13 @@ Commands:
   %s
   %s
   %s
+  %s
+  %s
+  %s
   version      Print current migration version
 
 Source drivers: `+strings.Join(source.List(), ", ")+`
-Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, upElasticUsage, seedUsage, seedDownUsage, seedInfluxUsage, seedElasticDetail, downUsage, dropUsage, forceUsage)
+Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoUsage, upUsage, upElasticUsage, httpUp, httpDown, seedUsage, seedDownUsage, seedInfluxUsage, seedElasticDetail, downUsage, dropUsage, forceUsage, seedHTTPDetail)
 	}
 
 	flag.Parse()
@@ -326,6 +339,44 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		handleSubCmdHelp(*helpPtr, upElasticUsage, elasticDownSet)
 
 		if err := seedDownElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
+	case "http-up":
+		httpUpSet, helpPtr := newFlagSetWithHelp("http-up")
+
+		if err := httpUpSet.Parse(args); err != nil {
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
+		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("skip-error:", *skippErrorPtr)
+		log.Println("debug:", *debugPtr)
+
+		handleSubCmdHelp(*helpPtr, httpUp, httpUpSet)
+
+		if err := seedUpHttpCmd(*databasePtr, *pathPtr, *skippErrorPtr, *debugPtr); err != nil {
+			log.fatalErr(err)
+		}
+
+		log.Println("Finished after", time.Since(startTime))
+	case "http-down":
+		httpDownSet, helpPtr := newFlagSetWithHelp("http-down")
+
+		if err := httpDownSet.Parse(args); err != nil {
+			log.fatal(fmt.Errorf("errors: " + err.Error()).Error())
+		}
+
+		log.Println("database:", *databasePtr)
+		log.Println("path:", *pathPtr)
+		log.Println("skip-error:", *skippErrorPtr)
+		log.Println("debug:", *debugPtr)
+
+		handleSubCmdHelp(*helpPtr, httpDown, httpDownSet)
+
+		if err := seedDownHttpCmd(*databasePtr, *pathPtr, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 

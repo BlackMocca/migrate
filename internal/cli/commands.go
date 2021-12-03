@@ -16,6 +16,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/elasticsearch"
 	_ "github.com/golang-migrate/migrate/v4/database/elasticsearch"
+	httpModels "github.com/golang-migrate/migrate/v4/database/http"
 	_ "github.com/golang-migrate/migrate/v4/database/stub" // TODO remove again
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -317,6 +318,125 @@ func seedUpElasticCmd(database string, path string, index string, skippError boo
 				req.Method = elastic.RestConfig.Method
 				req.Header = elastic.RestConfig.ToHTTPHeader()
 				req.Body = elastic.RestConfig.Body
+
+				resp, err := req.Send()
+				if err != nil {
+					return err
+				}
+
+				if resp.StatusCode() >= 400 {
+					msg := errors.New(string(resp.Body()))
+					if skippError {
+						fmt.Println(msg.Error())
+					} else {
+						return msg
+					}
+				}
+			}
+
+			fmt.Println("migrate file: " + fInfo.Name() + " success")
+		}
+	}
+
+	return nil
+}
+
+func seedUpHttpCmd(database string, path string, skippError bool, debug bool) error {
+	filesInfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	if len(filesInfo) == 0 {
+		return migrate.ErrNoChange
+	}
+
+	for _, fInfo := range filesInfo {
+		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".up.json") {
+			filepath := path + "/" + fInfo.Name()
+
+			bu, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				return err
+			}
+
+			restyConfig := make([]*httpModels.RestConfig, 0)
+			params := make([]map[string]interface{}, 0)
+			if err := json.Unmarshal(bu, &params); err != nil {
+				return err
+			}
+			for _, param := range params {
+				r := httpModels.NewRestConfig(param)
+				restyConfig = append(restyConfig, r)
+			}
+
+			for _, rest := range restyConfig {
+				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
+				req.URL = url
+				req.QueryParam = rest.QueryParams
+				req.Method = rest.Method
+				req.Header = http.Header(rest.Header)
+				req.Body = rest.Body
+
+				resp, err := req.Send()
+				if err != nil {
+					return err
+				}
+
+				if resp.StatusCode() >= 400 {
+					msg := errors.New(string(resp.Body()))
+					if skippError {
+						fmt.Println(msg.Error())
+					} else {
+						return msg
+					}
+				}
+			}
+
+			fmt.Println("migrate file: " + fInfo.Name() + " success")
+		}
+	}
+
+	return nil
+}
+
+func seedDownHttpCmd(database string, path string, skippError bool, debug bool) error {
+	filesInfo, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	if len(filesInfo) == 0 {
+		return migrate.ErrNoChange
+	}
+
+	for i := len(filesInfo) - 1; i >= 0; i-- {
+		fInfo := filesInfo[i]
+		if !fInfo.IsDir() && strings.Contains(fInfo.Name(), ".down.json") {
+			filepath := path + "/" + fInfo.Name()
+
+			bu, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				return err
+			}
+
+			restyConfig := make([]*httpModels.RestConfig, 0)
+			params := make([]map[string]interface{}, 0)
+			if err := json.Unmarshal(bu, &params); err != nil {
+				return err
+			}
+			for _, param := range params {
+				r := httpModels.NewRestConfig(param)
+				restyConfig = append(restyConfig, r)
+			}
+
+			for _, rest := range restyConfig {
+				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
+				req.URL = url
+				req.QueryParam = rest.QueryParams
+				req.Method = rest.Method
+				req.Header = http.Header(rest.Header)
+				req.Body = rest.Body
 
 				resp, err := req.Send()
 				if err != nil {
