@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-type HttpSeed struct {
+type SmockerSeed struct {
 	RestConfig *RestConfig
 }
 
@@ -19,7 +19,6 @@ type RestConfig struct {
 	QueryParams   url.Values  `json:"query_params"`
 	Header        http.Header `json:"header"`
 	FilePath      string      `json:"file_path"`
-	BodyType      string      `json:"body_type"`
 	Body          interface{} `json:"body"`
 }
 
@@ -65,10 +64,6 @@ func NewRestConfig(params map[string]interface{}) *RestConfig {
 		case "file_path":
 			if val != nil {
 				ptr.FilePath = cast.ToString(val)
-			}
-		case "body_type":
-			if val != nil {
-				ptr.BodyType = cast.ToString(val)
 			}
 		case "body":
 			if val != nil {

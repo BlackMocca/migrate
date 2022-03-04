@@ -1,0 +1,11 @@
+- request:
+    method: GET
+    path: /hello/world
+  response:
+    status: 200
+    headers:
+      Content-Type: application/json
+    body: >
+      {
+        "hello": "Hello, World!"
+      }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -377,6 +378,16 @@ func seedUpHttpCmd(database string, path string, skippError bool, debug bool) er
 				req.Method = rest.Method
 				req.Header = http.Header(rest.Header)
 				req.Body = rest.Body
+
+				if rest.BodyType == "binary" {
+					ymlPath := path + "/" + rest.FilePath
+					bu, err := ioutil.ReadFile(ymlPath)
+					if err != nil {
+						return err
+					}
+
+					req.SetBody(bytes.NewReader(bu))
+				}
 
 				resp, err := req.Send()
 				if err != nil {

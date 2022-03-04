@@ -1,0 +1,15 @@
+[
+    {
+        "method": "POST",
+        "path": "/mocks",
+        "query_params": {
+            "reset": "true"
+        },
+        "header": {
+            "Content-Type": "application/x-yaml"
+        },
+        "file_path": "yml/hello.yml",
+        "body_type": "binary",
+        "body": null
+    }
+]
