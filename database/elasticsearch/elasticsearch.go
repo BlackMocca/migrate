@@ -2,15 +2,21 @@ package elasticsearch
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
 const (
 	INDEX_TEMPLATE = "${index}"
 	BODY_TYPE_BULK = "bulk"
+)
+
+var (
+	regexExludeHeader = regexp.MustCompile(`^([\w-]+:\w+)(,[\w-]+:\w+)*$`)
 )
 
 type Elasticsearch struct {
@@ -81,6 +87,28 @@ func (r *RestConfig) ReplaceStringWithIndex(index string) error {
 
 			r.Body = str
 		}
+	}
+
+	return nil
+}
+
+func (r *RestConfig) ExcludeHeader(excludeHeader string) error {
+	//key1:val1,key2:val2
+	if !regexExludeHeader.MatchString(excludeHeader) {
+		return errors.New("exclude_header incorrect format parameter")
+	}
+	if r.Header != nil {
+		headers := strings.Split(excludeHeader, ",")
+		for _, h := range headers {
+			keyValue := strings.Split(h, ":")
+			if len(keyValue) > 1 {
+				key := keyValue[0]
+				val := keyValue[1]
+				r.Header[key] = val
+			}
+
+		}
+
 	}
 
 	return nil

@@ -273,7 +273,7 @@ func seedUpInfluxCmd(database string, path string, token string) error {
 	return nil
 }
 
-func seedUpElasticCmd(database string, path string, index string, skippError bool, debug bool) error {
+func seedUpElasticCmd(database string, path string, excludeHeader string, index string, skippError bool, debug bool) error {
 	filesInfo, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -304,6 +304,9 @@ func seedUpElasticCmd(database string, path string, index string, skippError boo
 
 				restyConfig[configIndex].MigrationPath = path
 				if err := restyConfig[configIndex].ReplaceStringWithIndex(index); err != nil {
+					return err
+				}
+				if err := restyConfig[configIndex].ExcludeHeader(excludeHeader); err != nil {
 					return err
 				}
 				elastics = append(elastics, &elasticsearch.Elasticsearch{
@@ -342,7 +345,7 @@ func seedUpElasticCmd(database string, path string, index string, skippError boo
 	return nil
 }
 
-func seedUpHttpCmd(database string, path string, skippError bool, debug bool) error {
+func seedUpHttpCmd(database string, path string, excludeHeader string, skippError bool, debug bool) error {
 	filesInfo, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -371,6 +374,9 @@ func seedUpHttpCmd(database string, path string, skippError bool, debug bool) er
 			}
 
 			for _, rest := range restyConfig {
+				if err := rest.ExcludeHeader(excludeHeader); err != nil {
+					return err
+				}
 				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
@@ -411,7 +417,7 @@ func seedUpHttpCmd(database string, path string, skippError bool, debug bool) er
 	return nil
 }
 
-func seedDownHttpCmd(database string, path string, skippError bool, debug bool) error {
+func seedDownHttpCmd(database string, path string, excludeHeader string, skippError bool, debug bool) error {
 	filesInfo, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -441,6 +447,9 @@ func seedDownHttpCmd(database string, path string, skippError bool, debug bool) 
 			}
 
 			for _, rest := range restyConfig {
+				if err := rest.ExcludeHeader(excludeHeader); err != nil {
+					return err
+				}
 				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
@@ -471,7 +480,7 @@ func seedDownHttpCmd(database string, path string, skippError bool, debug bool) 
 	return nil
 }
 
-func seedDownElasticCmd(database string, path string, index string, skippError bool, debug bool) error {
+func seedDownElasticCmd(database string, path string, excludeHeader string, index string, skippError bool, debug bool) error {
 	filesInfo, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -503,6 +512,9 @@ func seedDownElasticCmd(database string, path string, index string, skippError b
 
 				restyConfig[configIndex].MigrationPath = path
 				if err := restyConfig[configIndex].ReplaceStringWithIndex(index); err != nil {
+					return err
+				}
+				if err := restyConfig[configIndex].ExcludeHeader(excludeHeader); err != nil {
 					return err
 				}
 				elastics = append(elastics, &elasticsearch.Elasticsearch{
