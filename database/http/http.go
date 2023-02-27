@@ -1,11 +1,18 @@
 package elasticsearch
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
+	"strings"
 
 	"github.com/spf13/cast"
+)
+
+var (
+	regexExludeHeader = regexp.MustCompile(`^([\w-]+:\w+)(,[\w-]+:\w+)*$`)
 )
 
 type HttpSeed struct {
@@ -80,4 +87,26 @@ func NewRestConfig(params map[string]interface{}) *RestConfig {
 	ptr.Header = header
 
 	return ptr
+}
+
+func (r *RestConfig) ExcludeHeader(excludeHeader string) error {
+	//key1:val1,key2:val2
+	if !regexExludeHeader.MatchString(excludeHeader) {
+		return errors.New("exclude_header incorrect format parameter")
+	}
+	if r.Header != nil {
+		headers := strings.Split(excludeHeader, ",")
+		for _, h := range headers {
+			keyValue := strings.Split(h, ":")
+			if len(keyValue) > 1 {
+				key := keyValue[0]
+				val := keyValue[1]
+				r.Header.Add(key, val)
+			}
+
+		}
+
+	}
+
+	return nil
 }

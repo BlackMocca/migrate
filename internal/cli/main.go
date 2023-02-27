@@ -58,6 +58,7 @@ example data
 	-database url host to elastic example http://127.0.0.1:9200
 	-path	  Identify directory path to migrate
 	-index	  Elastic Database index
+	-exclude_header Exclude Header ; example "key1:val1,key2:val2"
 	-skip-error skip error when migrate but will show message
 	-debug	  show request to elastic
 	`
@@ -66,6 +67,7 @@ This function is read Directory for get File to send rest api
 example data
 	-database url host to send example http://127.0.0.1:9200
 	-path	  Identify directory path to migrate
+	-exclude_header Exclude Header ; example "key1:val1,key2:val2"
 	-skip-error skip error when migrate but will show message
 	-debug	  show request to elastic
 	`
@@ -108,6 +110,7 @@ func Main(version string) {
 	sourcePtr := flag.String("source", "", "")
 	tokenPtr := flag.String("token", "", "Token Policy")
 	indexPtr := flag.String("index", "", "Elastic Index")
+	excludeHeader := flag.String("exclude_header", "", "Exclude Header")
 	skippErrorPtr := flag.Bool("skip-error", true, "skip error when some migrate error but will show error message")
 	debugPtr := flag.Bool("debug", false, "open debug mode")
 
@@ -318,7 +321,7 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 
 		handleSubCmdHelp(*helpPtr, upElasticUsage, elasticUpSet)
 
-		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *excludeHeader, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 
@@ -338,7 +341,7 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 
 		handleSubCmdHelp(*helpPtr, upElasticUsage, elasticDownSet)
 
-		if err := seedDownElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+		if err := seedDownElasticCmd(*databasePtr, *pathPtr, *excludeHeader, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 
@@ -357,7 +360,7 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 
 		handleSubCmdHelp(*helpPtr, httpUp, httpUpSet)
 
-		if err := seedUpHttpCmd(*databasePtr, *pathPtr, *skippErrorPtr, *debugPtr); err != nil {
+		if err := seedUpHttpCmd(*databasePtr, *pathPtr, *excludeHeader, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 
@@ -373,10 +376,11 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 		log.Println("path:", *pathPtr)
 		log.Println("skip-error:", *skippErrorPtr)
 		log.Println("debug:", *debugPtr)
+		log.Println("exclude_header:", *excludeHeader)
 
 		handleSubCmdHelp(*helpPtr, httpDown, httpDownSet)
 
-		if err := seedDownHttpCmd(*databasePtr, *pathPtr, *skippErrorPtr, *debugPtr); err != nil {
+		if err := seedDownHttpCmd(*databasePtr, *pathPtr, *excludeHeader, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 
@@ -471,7 +475,7 @@ Database drivers: `+strings.Join(database.List(), ", ")+"\n", createUsage, gotoU
 
 		handleSubCmdHelp(*helpPtr, seedElasticDetail, seedElasticSet)
 
-		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
+		if err := seedUpElasticCmd(*databasePtr, *pathPtr, *excludeHeader, *indexPtr, *skippErrorPtr, *debugPtr); err != nil {
 			log.fatalErr(err)
 		}
 
