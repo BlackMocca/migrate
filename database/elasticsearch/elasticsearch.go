@@ -27,6 +27,7 @@ type Elasticsearch struct {
 type RestConfig struct {
 	MigrationPath string            `json:"-"`
 	Method        string            `json:"method"`
+	URL           string            `json:"url"`
 	Path          string            `json:"path"`
 	Header        map[string]string `json:"header"`
 	Body          interface{}       `json:"body"`
@@ -94,21 +95,23 @@ func (r *RestConfig) ReplaceStringWithIndex(index string) error {
 
 func (r *RestConfig) ExcludeHeader(excludeHeader string) error {
 	//key1:val1,key2:val2
-	if !regexExludeHeader.MatchString(excludeHeader) {
-		return errors.New("exclude_header incorrect format parameter")
-	}
-	if r.Header != nil {
-		headers := strings.Split(excludeHeader, ",")
-		for _, h := range headers {
-			keyValue := strings.Split(h, ":")
-			if len(keyValue) > 1 {
-				key := keyValue[0]
-				val := keyValue[1]
-				r.Header[key] = val
+	if excludeHeader != "" {
+		if !regexExludeHeader.MatchString(excludeHeader) {
+			return errors.New("exclude_header incorrect format parameter")
+		}
+		if r.Header != nil {
+			headers := strings.Split(excludeHeader, ",")
+			for _, h := range headers {
+				keyValue := strings.Split(h, ":")
+				if len(keyValue) > 1 {
+					key := keyValue[0]
+					val := keyValue[1]
+					r.Header[key] = val
+				}
+
 			}
 
 		}
-
 	}
 
 	return nil

@@ -316,7 +316,12 @@ func seedUpElasticCmd(database string, path string, excludeHeader string, index 
 			}
 
 			for _, elastic := range elastics {
-				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				var url string
+				if elastic.RestConfig.URL != "" {
+					url = fmt.Sprintf("%s/%s", strings.Trim(elastic.RestConfig.URL, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				} else {
+					url = fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				}
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
 				req.Method = elastic.RestConfig.Method
@@ -377,7 +382,12 @@ func seedUpHttpCmd(database string, path string, excludeHeader string, skippErro
 				if err := rest.ExcludeHeader(excludeHeader); err != nil {
 					return err
 				}
-				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				var url string
+				if rest.URL != "" {
+					url = fmt.Sprintf("%s/%s", strings.Trim(rest.URL, "/"), strings.Trim(rest.Path, "/"))
+				} else {
+					url = fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				}
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
 				req.QueryParam = rest.QueryParams
@@ -450,7 +460,12 @@ func seedDownHttpCmd(database string, path string, excludeHeader string, skippEr
 				if err := rest.ExcludeHeader(excludeHeader); err != nil {
 					return err
 				}
-				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				var url string
+				if rest.URL != "" {
+					url = fmt.Sprintf("%s/%s", strings.Trim(rest.URL, "/"), strings.Trim(rest.Path, "/"))
+				} else {
+					url = fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(rest.Path, "/"))
+				}
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
 				req.QueryParam = rest.QueryParams
@@ -524,7 +539,12 @@ func seedDownElasticCmd(database string, path string, excludeHeader string, inde
 			}
 
 			for _, elastic := range elastics {
-				url := fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				var url string
+				if elastic.RestConfig.URL != "" {
+					url = fmt.Sprintf("%s/%s", strings.Trim(elastic.RestConfig.URL, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				} else {
+					url = fmt.Sprintf("%s/%s", strings.Trim(database, "/"), strings.Trim(elastic.RestConfig.Path, "/"))
+				}
 				req := resty.New().SetContentLength(true).SetDebug(debug).SetAllowGetMethodPayload(true).R()
 				req.URL = url
 				req.Method = elastic.RestConfig.Method

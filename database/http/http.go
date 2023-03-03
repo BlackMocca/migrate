@@ -21,6 +21,7 @@ type HttpSeed struct {
 
 type RestConfig struct {
 	MigrationPath string      `json:"-"`
+	URL           string      `json:"url"`
 	Method        string      `json:"method"`
 	Path          string      `json:"path"`
 	QueryParams   url.Values  `json:"query_params"`
@@ -46,6 +47,8 @@ func NewRestConfig(params map[string]interface{}) *RestConfig {
 		switch key {
 		case "method":
 			ptr.Method = cast.ToString(val)
+		case "url":
+			ptr.URL = cast.ToString(val)
 		case "path":
 			ptr.Path = cast.ToString(val)
 		case "query_params":
@@ -91,21 +94,23 @@ func NewRestConfig(params map[string]interface{}) *RestConfig {
 
 func (r *RestConfig) ExcludeHeader(excludeHeader string) error {
 	//key1:val1,key2:val2
-	if !regexExludeHeader.MatchString(excludeHeader) {
-		return errors.New("exclude_header incorrect format parameter")
-	}
-	if r.Header != nil {
-		headers := strings.Split(excludeHeader, ",")
-		for _, h := range headers {
-			keyValue := strings.Split(h, ":")
-			if len(keyValue) > 1 {
-				key := keyValue[0]
-				val := keyValue[1]
-				r.Header.Add(key, val)
+	if excludeHeader != "" {
+		if !regexExludeHeader.MatchString(excludeHeader) {
+			return errors.New("exclude_header incorrect format parameter")
+		}
+		if r.Header != nil {
+			headers := strings.Split(excludeHeader, ",")
+			for _, h := range headers {
+				keyValue := strings.Split(h, ":")
+				if len(keyValue) > 1 {
+					key := keyValue[0]
+					val := keyValue[1]
+					r.Header.Add(key, val)
+				}
+
 			}
 
 		}
-
 	}
 
 	return nil
