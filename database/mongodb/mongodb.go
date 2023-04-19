@@ -3,19 +3,20 @@ package mongodb
 import (
 	"context"
 	"fmt"
-	"github.com/cenkalti/backoff/v4"
-	"github.com/golang-migrate/migrate/v4/database"
-	"github.com/hashicorp/go-multierror"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 	"io"
 	"io/ioutil"
 	"net/url"
 	os "os"
 	"strconv"
 	"time"
+
+	"github.com/BlackMocca/mongo-go-driver/bson"
+	"github.com/BlackMocca/mongo-go-driver/mongo"
+	"github.com/BlackMocca/mongo-go-driver/mongo/options"
+	"github.com/BlackMocca/mongo-go-driver/x/mongo/driver/connstring"
+	"github.com/cenkalti/backoff/v4"
+	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/hashicorp/go-multierror"
 )
 
 func init() {
@@ -232,6 +233,7 @@ func (m *Mongo) Run(migration io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("unmarshaling json error: %s", err)
 	}
+
 	if m.config.TransactionMode {
 		if err := m.executeCommandsWithTransaction(context.TODO(), cmds); err != nil {
 			return err

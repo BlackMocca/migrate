@@ -7,24 +7,21 @@ import (
 
 	"log"
 
-	"github.com/golang-migrate/migrate/v4"
 	"io"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-)
 
-import (
+	"github.com/BlackMocca/mongo-go-driver/bson"
+	"github.com/BlackMocca/mongo-go-driver/mongo"
+	"github.com/BlackMocca/mongo-go-driver/mongo/options"
 	"github.com/dhui/dktest"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
+	"github.com/golang-migrate/migrate/v4"
 
-import (
 	dt "github.com/golang-migrate/migrate/v4/database/testing"
 	"github.com/golang-migrate/migrate/v4/dktesting"
+
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
