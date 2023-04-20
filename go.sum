@@ -55,8 +55,8 @@ github.com/Azure/go-autorest/autorest/date v0.3.0/go.mod h1:BI0uouVdmngYNUzGWeSY
 github.com/Azure/go-autorest/autorest/mocks v0.4.1/go.mod h1:LTp+uSrOhSkaKrUy935gNZuuIPPVsHlr9DSOxSayd+k=
 github.com/Azure/go-autorest/tracing v0.6.0 h1:TYi4+3m5t6K48TGI9AUdb+IzbnSxvnvUMfuitfgcfuo=
 github.com/Azure/go-autorest/tracing v0.6.0/go.mod h1:+vhtPC754Xsa23ID7GlGsrdKBpUA79WCAKPPZVC2DeU=
-github.com/BlackMocca/mongo-go-driver v1.0.3 h1:nDY+S8GzJt04h72PiUJ+4xDlvitPHKbmKI5bvbfhWzI=
-github.com/BlackMocca/mongo-go-driver v1.0.3/go.mod h1:Haq2lHVvXCD3VK1sCSUrT8x59GAjoeOfsdBMKJvmMY4=
+github.com/BlackMocca/mongo-go-driver v1.0.4 h1:2H6WtXY8g5TOeQ99ntKjY3jk00CxMxgpb/mQjzxGgVI=
+github.com/BlackMocca/mongo-go-driver v1.0.4/go.mod h1:Haq2lHVvXCD3VK1sCSUrT8x59GAjoeOfsdBMKJvmMY4=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ClickHouse/clickhouse-go v1.4.3 h1:iAFMa2UrQdR5bHJ2/yaSLffZkxpcOYQMCUuKeNXGdqc=

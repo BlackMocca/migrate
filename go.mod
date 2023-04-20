@@ -3,7 +3,7 @@ module github.com/golang-migrate/migrate/v4
 require (
 	cloud.google.com/go/spanner v1.18.0
 	cloud.google.com/go/storage v1.10.0
-	github.com/BlackMocca/mongo-go-driver v1.0.3
+	github.com/BlackMocca/mongo-go-driver v1.0.4
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/apache/arrow/go/arrow v0.0.0-20210521153258-78c88a9f517b // indirect
 	github.com/aws/aws-sdk-go v1.17.7
